@@ -41,7 +41,7 @@ export async function loadFFmpeg(onLog?: (msg: string) => void): Promise<void> {
 }
 
 export async function processVideo(
-  file: File,
+  source: File | string,
   startTime: number,
   endTime: number,
   aspectRatio: AspectRatio,
@@ -53,7 +53,7 @@ export async function processVideo(
     onProgress(Math.min(Math.round(progress * 100), 99));
   });
 
-  await ffmpeg.writeFile("input.mp4", await fetchFile(file));
+  await ffmpeg.writeFile("input.mp4", await fetchFile(source));
 
   const args = [
     "-i", "input.mp4",

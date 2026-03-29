@@ -13,6 +13,7 @@ type Stage = "upload" | "edit" | "processing" | "done";
 export default function Home() {
   const [stage, setStage] = useState<Stage>("upload");
   const [file, setFile] = useState<File | null>(null);
+  const [videoSource, setVideoSource] = useState<File | string | null>(null);
   const [videoSrc, setVideoSrc] = useState<string>("");
   const [duration, setDuration] = useState(0);
   const [startTime, setStartTime] = useState(0);
@@ -35,13 +36,23 @@ export default function Home() {
   }, [stage, ffmpegReady, loadingFFmpeg]);
 
   const handleFileSelect = useCallback((f: File) => {
-    if (videoSrc) URL.revokeObjectURL(videoSrc);
+    if (videoSrc && file) URL.revokeObjectURL(videoSrc);
     const src = URL.createObjectURL(f);
     setFile(f);
+    setVideoSource(f);
     setVideoSrc(src);
     setStage("edit");
     setOutputSrc("");
-  }, [videoSrc]);
+  }, [videoSrc, file]);
+
+  const handleUrlSelect = useCallback((url: string) => {
+    if (videoSrc && file) URL.revokeObjectURL(videoSrc);
+    setFile(null);
+    setVideoSource(url);
+    setVideoSrc(url);
+    setStage("edit");
+    setOutputSrc("");
+  }, [videoSrc, file]);
 
   const handleDurationLoad = useCallback((d: number) => {
     setDuration(d);
@@ -50,13 +61,13 @@ export default function Home() {
   }, []);
 
   async function handleProcess() {
-    if (!file || !ffmpegReady) return;
+    if (!videoSource || !ffmpegReady) return;
     setStage("processing");
     setProgress(0);
 
     try {
       if (prevOutputRef.current) URL.revokeObjectURL(prevOutputRef.current);
-      const url = await processVideo(file, startTime, endTime, aspectRatio, setProgress);
+      const url = await processVideo(videoSource, startTime, endTime, aspectRatio, setProgress);
       prevOutputRef.current = url;
       setOutputSrc(url);
       setStage("done");
@@ -69,7 +80,8 @@ export default function Home() {
   function handleReset() {
     setStage("upload");
     setFile(null);
-    if (videoSrc) URL.revokeObjectURL(videoSrc);
+    setVideoSource(null);
+    if (videoSrc && file) URL.revokeObjectURL(videoSrc);
     setVideoSrc("");
     setOutputSrc("");
     setDuration(0);
@@ -77,7 +89,7 @@ export default function Home() {
 
   const outputFileName = file
     ? `${file.name.replace(/\.[^.]+$/, "")}_${aspectRatio.replace(":", "x")}.mp4`
-    : "output.mp4";
+    : `clip_${aspectRatio.replace(":", "x")}.mp4`;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -91,11 +103,14 @@ export default function Home() {
 
         {/* Upload stage */}
         {stage === "upload" && (
-          <VideoUploader onFileSelect={handleFileSelect} />
+          <VideoUploader
+            onFileSelect={handleFileSelect}
+            onUrlSelect={handleUrlSelect}
+          />
         )}
 
         {/* Edit / Done stage */}
-        {(stage === "edit" || stage === "done") && file && (
+        {(stage === "edit" || stage === "done") && videoSource && (
           <div className="space-y-6">
 
             {/* Source preview */}
