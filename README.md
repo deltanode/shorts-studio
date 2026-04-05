@@ -1,6 +1,6 @@
 # Shorts Studio
 
-A browser-based video editing tool for converting long-form content into short-form clips - trim, reframe, and export without leaving the browser.
+A browser-based video editing tool for converting `long-form content` into `short-form clips` - trim, reframe, and export without leaving the browser.
 
 Drop a file or paste a URL, pick your time range and aspect ratio, and download a production-ready clip in seconds.
 
